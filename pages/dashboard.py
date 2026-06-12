@@ -1,10 +1,15 @@
 import sqlite3
+from datetime import datetime
 
 DB_NAME = "crisislens.db"
 
 
+def get_connection():
+    return sqlite3.connect(DB_NAME, check_same_thread=False)
+
+
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -26,31 +31,43 @@ def init_db():
     conn.close()
 
 
-def save_incident(data):
-    init_db()
-    conn = sqlite3.connect(DB_NAME)
+# IMPORTANT: auto-create table when module loads
+init_db()
+
+
+def save_incident(name, location, description, image_path,
+                   category, severity, ai_summary, fake_probability):
+
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-    INSERT INTO incidents (
-        name, location, description, image_path,
-        category, severity, ai_summary, fake_probability
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, data)
+        INSERT INTO incidents
+        (name, location, description, image_path,
+         category, severity, ai_summary, fake_probability)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (name, location, description, image_path,
+          category, severity, ai_summary, fake_probability))
 
     conn.commit()
     conn.close()
 
 
 def get_incidents():
-    init_db()
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("""
-    SELECT * FROM incidents ORDER BY created_at DESC
-    """)
+        cursor.execute("""
+            SELECT *
+            FROM incidents
+            ORDER BY created_at DESC
+        """)
 
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+
+    except Exception as e:
+        print("DB Error:", e)
+        return []

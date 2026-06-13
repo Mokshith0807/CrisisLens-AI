@@ -8,24 +8,28 @@ def create_database():
     cursor = conn.cursor()
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS incidents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        location TEXT,
-        description TEXT,
-        image_path TEXT,
-        category TEXT,
-        severity TEXT,
-        ai_summary TEXT,
-        fake_probability TEXT,
-        image_ai_analysis TEXT,
-        emergency_recommendation TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+        CREATE TABLE IF NOT EXISTS incidents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            location TEXT,
+            description TEXT,
+            image_path TEXT,
+            category TEXT,
+            severity TEXT,
+            ai_summary TEXT,
+            fake_probability TEXT,
+            image_ai_analysis TEXT,
+            emergency_recommendation TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
     """)
 
     conn.commit()
     conn.close()
+
+
+# Create table automatically when imported
+create_database()
 
 
 def save_incident(
@@ -43,23 +47,20 @@ def save_incident(
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    # Create table if missing
-    create_database()
-
     cursor.execute("""
-    INSERT INTO incidents (
-        name,
-        location,
-        description,
-        image_path,
-        category,
-        severity,
-        ai_summary,
-        fake_probability,
-        image_ai_analysis,
-        emergency_recommendation
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO incidents (
+            name,
+            location,
+            description,
+            image_path,
+            category,
+            severity,
+            ai_summary,
+            fake_probability,
+            image_ai_analysis,
+            emergency_recommendation
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         name,
         location,
@@ -78,23 +79,17 @@ def save_incident(
 
 
 def get_incidents():
-    create_database()
-
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT *
-    FROM incidents
-    ORDER BY created_at DESC
+        SELECT *
+        FROM incidents
+        ORDER BY created_at DESC
     """)
 
-    rows = cursor.fetchall()
+    data = cursor.fetchall()
 
     conn.close()
 
-    return rows
-
-
-# Automatically create table on startup
-create_database()
+    return data

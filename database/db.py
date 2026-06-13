@@ -7,8 +7,10 @@ def create_database():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
+    cursor.execute("DROP TABLE IF EXISTS incidents")
+
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS incidents (
+        CREATE TABLE incidents (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             location TEXT,
@@ -28,7 +30,6 @@ def create_database():
     conn.close()
 
 
-# Create table automatically when imported
 create_database()
 
 
@@ -92,4 +93,4 @@ def get_incidents():
 
     conn.close()
 
-    return data
+

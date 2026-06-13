@@ -1,73 +1,46 @@
-import sqlite3
-from datetime import datetime
+import streamlit as st
+import pandas as pd
+from database.db import get_incidents
 
-DB_NAME = "crisislens.db"
+st.set_page_config(page_title="Dashboard", page_icon="📊")
 
+st.title("📊 CrisisLens Dashboard")
 
-def get_connection():
-    return sqlite3.connect(DB_NAME, check_same_thread=False)
+incidents = get_incidents()
 
+if not incidents:
+    st.warning("No incidents found. Submit a report first.")
+    st.stop()
 
-def init_db():
-    conn = get_connection()
-    cursor = conn.cursor()
+columns = [
+    "id",
+    "name",
+    "location",
+    "description",
+    "image_path",
+    "category",
+    "severity",
+    "ai_summary",
+    "fake_probability",
+    "image_ai_analysis",
+    "emergency_recommendation",
+    "created_at"
+]
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS incidents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        location TEXT,
-        description TEXT,
-        image_path TEXT,
-        category TEXT,
-        severity TEXT,
-        ai_summary TEXT,
-        fake_probability TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
+df = pd.DataFrame(incidents, columns=columns)
 
-    conn.commit()
-    conn.close()
+st.subheader("Total Incidents")
+st.metric("Reports", len(df))
 
+st.subheader("Recent Reports")
+st.dataframe(df)
 
-# IMPORTANT: auto-create table when module loads
-init_db()
+if "severity" in df.columns:
+    st.subheader("Severity Distribution")
+    severity_counts = df["severity"].value_counts()
+    st.bar_chart(severity_counts)
 
-
-def save_incident(name, location, description, image_path,
-                   category, severity, ai_summary, fake_probability):
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO incidents
-        (name, location, description, image_path,
-         category, severity, ai_summary, fake_probability)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (name, location, description, image_path,
-          category, severity, ai_summary, fake_probability))
-
-    conn.commit()
-    conn.close()
-
-
-def get_incidents():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT *
-            FROM incidents
-            ORDER BY created_at DESC
-        """)
-
-        rows = cursor.fetchall()
-        conn.close()
-        return rows
-
-    except Exception as e:
-        print("DB Error:", e)
-        return []
+if "category" in df.columns:
+    st.subheader("Category Distribution")
+    category_counts = df["category"].value_counts()
+    st.bar_chart(category_counts)

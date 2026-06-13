@@ -22,7 +22,7 @@ Return:
 """
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash",
+        model="gemini-2.5-flash",
         contents=prompt
     )
 
@@ -34,7 +34,7 @@ def analyze_image(image_path):
 
     with open(image_path, "rb") as img:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents=[prompt, img]
         )
 

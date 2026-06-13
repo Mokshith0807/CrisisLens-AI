@@ -4,7 +4,9 @@ from google import genai
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(
+    api_key=os.getenv("GOOGLE_API_KEY")
+)
 
 
 def analyze_incident(text):
@@ -21,21 +23,39 @@ Return:
 - Summary
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
 
-    return response.text
+        return response.text
+
+    except Exception as e:
+        return f"AI Analysis Error: {str(e)}"
 
 
 def analyze_image(image_path):
-    prompt = "Analyze this disaster image and describe risks, damage, and response."
+    """
+    Safe image analysis for Streamlit Cloud
+    """
 
-    with open(image_path, "rb") as img:
+    try:
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
+
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[prompt, img]
+            contents=[
+                {
+                    "mime_type": "image/jpeg",
+                    "data": image_bytes
+                },
+                "Analyze this disaster image. Describe damage, risks, severity, and emergency response recommendations."
+            ]
         )
 
-    return response.text
+        return response.text
+
+    except Exception as e:
+        return f"Image Analysis Error: {str(e)}"
